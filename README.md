@@ -1,33 +1,220 @@
 # Sony Customer Care CrewAI RAG App
 
-This project is a Streamlit customer-support app built with CrewAI. It uses a
-local Sony customer-care document first, then falls back to web search only when
-the local document does not contain a strong match.
+This project is a Streamlit customer-support application built with CrewAI. It
+answers Sony support questions using a local RAG document first and uses web
+search only when the local document does not contain a strong match.
 
-## Features
+The app includes a polished Streamlit frontend, a sequential multi-agent CrewAI
+backend, local text logging, optional Google Sheet logging, and a source
+document viewer for transparency.
 
-- Streamlit chat interface
-- Glassmorphism frontend with animated gradients
-- CrewAI sequential agent flow
-- RAG-first answer flow using `sony_customer_care_rag_document.txt`
+## Key Features
+
+- Beautiful Streamlit UI with glassmorphism styling
+- Animated gradient background
+- Chat-style customer support interface
+- Chat history during the session
+- RAG-first answer flow
 - Web search fallback using Serper
+- CrewAI sequential agent execution
 - Agent execution timeline
 - Agent status panel
-- Chat history
 - Source document viewer
 - Web search references tab
-- Text log saved to `answers.txt`
+- Local support log saved to `answers.txt`
 - Optional Google Sheet logging
+- API keys loaded from `.env`
 
-## Project Files
+## Project Structure
 
 ```text
-app.py
-requirements.txt
-sony_customer_care_rag_document.txt
-.env.example
-.gitignore
-README.md
+sony-customer-care-crewai/
+|-- app.py
+|-- requirements.txt
+|-- sony_customer_care_rag_document.txt
+|-- .env.example
+|-- .gitignore
+|-- README.md
+```
+
+## Tech Stack
+
+| Layer | Tool |
+| --- | --- |
+| Frontend | Streamlit |
+| Agent framework | CrewAI |
+| LLM | OpenAI |
+| Web search | Serper API |
+| Local knowledge base | Text document |
+| Environment variables | python-dotenv |
+| Cloud logging | Google Sheets with gspread |
+
+## Agent Roles
+
+| Agent | Role |
+| --- | --- |
+| Assistant | Answers from the local Sony customer-care RAG context |
+| Web Search Assistant | Uses Serper only when local RAG does not have a strong match |
+| Entry Agent | Saves the query, answer source, final answer, and status |
+
+## System Flow
+
+```mermaid
+flowchart TD
+    A[Customer opens Streamlit application] --> B[Customer enters Sony support query]
+    B --> C[RAG retriever]
+    C --> D[Load local knowledge base]
+    D --> E[Split document into sections]
+    E --> F[Tokenize customer query]
+    F --> G[Calculate relevance score]
+    G --> H{Relevant RAG context found?}
+
+    H -- Yes --> I[Assistant Agent]
+    I --> J[Generate answer from local knowledge base]
+
+    H -- No --> K[Web Search Assistant]
+    K --> L[Search using Serper API]
+    L --> M[Prefer official Sony support sources]
+    M --> N[Generate web-based answer]
+
+    J --> O[Select final answer]
+    N --> O
+    O --> P[Entry Agent]
+    P --> Q[Create support record]
+    Q --> R[Save record to answers.txt]
+    Q --> S{Google Sheets configured?}
+
+    S -- Yes --> T[Authenticate using service account]
+    T --> U[Append query and answer to Google Sheet]
+    S -- No --> V[Skip Google Sheet logging]
+
+    R --> W[Update agent timeline]
+    U --> W
+    V --> W
+    W --> X[Display final answer in Streamlit]
+    X --> Y[Show source, references, and save status]
+```
+
+## Multi-Agent Architecture
+
+```mermaid
+flowchart TB
+    subgraph UI[Streamlit Frontend]
+        UI1[Customer chat input]
+        UI2[Chat history]
+        UI3[Agent execution timeline]
+        UI4[Source document viewer]
+        UI5[Web references]
+        UI6[Google Sheet status]
+    end
+
+    subgraph QP[Query Processing Layer]
+        Q1[Customer query]
+        Q2[Local knowledge retrieval]
+        Q3[Relevance decision]
+    end
+
+    subgraph AGENTS[CrewAI Sequential Agents]
+        A1[Agent 1: Assistant]
+        A2[Agent 2: Web Search Assistant]
+        A3[Agent 3: Entry Agent]
+    end
+
+    subgraph LOGS[Logging Layer]
+        L1[answers.txt]
+        L2[Google Sheets]
+    end
+
+    UI --> QP
+    QP --> A1
+    Q3 -- No strong RAG match --> A2
+    A1 --> A3
+    A2 --> A3
+    A3 --> LOGS
+    A3 --> UI
+```
+
+## RAG Decision Architecture
+
+```mermaid
+flowchart LR
+    A[Customer query] --> B[Tokenize query]
+    C[Knowledge base TXT file] --> D[Split into sections]
+    D --> E[Tokenize sections]
+    B --> F[Compare query terms]
+    E --> F
+    F --> G[Calculate score]
+    G --> H{Score above threshold?}
+
+    H -- Yes --> I[Return top relevant sections]
+    I --> J[Assistant Agent answer]
+
+    H -- No --> K[Return no strong match]
+    K --> L[Serper web search]
+    L --> M[Web Search Assistant answer]
+```
+
+The matcher ignores generic words such as `sony`, `customer`, `care`, and
+`support`. This prevents unrelated questions like "when Sony started" from
+being incorrectly answered from the local support document.
+
+## CrewAI Sequential Workflow
+
+```mermaid
+sequenceDiagram
+    participant U as Customer
+    participant UI as Streamlit UI
+    participant R as RAG Retriever
+    participant A as Assistant Agent
+    participant W as Web Search Agent
+    participant E as Entry Agent
+    participant T as answers.txt
+    participant G as Google Sheets
+
+    U->>UI: Submit customer-care query
+    UI->>R: Retrieve relevant local context
+
+    alt Relevant context found
+        R->>A: Send query and RAG context
+        A->>A: Generate local support answer
+        A->>W: Pass task context
+        W->>W: Skip web search
+    else No relevant context found
+        R->>A: Send query with insufficient context
+        A->>W: Request web fallback
+        W->>W: Search using Serper API
+        W->>W: Generate current web-based answer
+    end
+
+    A->>E: Pass assistant output
+    W->>E: Pass web-search output
+    E->>T: Save support record
+    E->>G: Append support log when configured
+    E->>UI: Return final record and save status
+    UI->>U: Display answer and source
+```
+
+## Simple End-to-End Flow
+
+```mermaid
+flowchart TD
+    A[Customer Query] --> B[Streamlit Frontend]
+    B --> C[Local RAG Retrieval]
+    C --> D{Relevant context available?}
+
+    D -- Yes --> E[Assistant Agent]
+    E --> F[Local RAG Answer]
+
+    D -- No --> G[Web Search Agent]
+    G --> H[Serper API Answer]
+
+    F --> I[Final Answer]
+    H --> I
+    I --> J[Entry Agent]
+    J --> K[answers.txt]
+    J --> L[Google Sheets]
+    K --> M[Display Result in Streamlit]
+    L --> M
 ```
 
 ## Setup
@@ -64,239 +251,87 @@ GOOGLE_WORKSHEET_NAME=CrewAI Logs
 ## Google Sheet Setup
 
 1. Create a Google Cloud service account.
-2. Enable Google Sheets API for the project.
+2. Enable the Google Sheets API.
 3. Download the service-account JSON key.
 4. Save it beside `app.py` as `service-account.json`, or use an absolute path in
    `GOOGLE_APPLICATION_CREDENTIALS`.
 5. Open the JSON file and copy the service-account email.
 6. Share your Google Sheet with that email as an editor.
 7. Put the spreadsheet ID in `GOOGLE_SHEET_ID`.
+8. Run `pip install -r requirements.txt` so `gspread` is installed.
 
-The app creates the worksheet automatically if it does not already exist.
+The app creates the worksheet automatically if it does not exist.
 
-## Run
+## Run The App
 
 ```powershell
 streamlit run app.py
 ```
 
-## How The App Works
+The application opens in the browser at:
 
-1. The user asks a question in the chat UI.
-2. The app searches the local Sony customer-care document.
-3. If relevant RAG context is found, the Assistant answers from the local
-   document and web search is skipped.
-4. If no strong RAG match is found, the Web Search Assistant uses Serper.
-5. The Entry Agent saves the support record to `answers.txt`.
-6. If Google Sheet variables are configured, the same record is appended to the
-   configured worksheet.
+```text
+http://localhost:8501
+```
 
-## Notes
+## Example Queries
+
+Use local RAG:
+
+```text
+What is the Sony customer care number?
+How do I track my Sony repair status?
+How can I book Sony TV service?
+```
+
+Use web fallback:
+
+```text
+When was Sony started?
+Who is the current CEO of Sony?
+What is Sony's latest camera launch?
+```
+
+## Output Logs
+
+The app saves a local log to:
+
+```text
+answers.txt
+```
+
+When Google Sheets is configured, the app also appends:
+
+- Timestamp
+- Query
+- Answer source
+- Final answer
+- Web status
+- References
+- Entry record
+- Model name
+
+## Troubleshooting
+
+If Google Sheet logging says `No module named 'gspread'`, install dependencies:
+
+```powershell
+pip install -r requirements.txt
+```
+
+If Google Sheet logging says credentials are missing, check:
+
+- `GOOGLE_APPLICATION_CREDENTIALS` points to the correct JSON file.
+- The JSON file exists beside `app.py` or at the absolute path you provided.
+- Your Google Sheet is shared with the service-account email.
+
+If a general Sony history/current-events question uses local RAG, add its
+generic words to the `STOPWORDS` set or raise the RAG `min_score` threshold in
+`retrieve_rag_context`.
+
+## Security Notes
 
 - Do not commit `.env`.
 - Do not commit `service-account.json`.
-- Do not commit `answers.txt` if it contains user queries or API output.
-- The local RAG matcher ignores generic words such as `sony`, `customer`,
-  `care`, and `support`, so general company-history questions use web search
-  instead of incorrectly matching the source document.
-
-flowchart TD
-
-    A[Customer Opens Streamlit Application] --> B[Customer Enters Sony Support Query]
-
-    B --> C[RAG Retriever]
-
-    C --> D[Load Local Knowledge Base]
-    D --> E[Split Document into Sections]
-    E --> F[Tokenize Customer Query]
-    F --> G[Calculate Relevance Score]
-
-    G --> H{Relevant RAG Context Found?}
-
-    H -- Yes --> I[Assistant Agent]
-    I --> J[Generate Answer from Local Knowledge Base]
-
-    H -- No --> K[Web Search Assistant]
-    K --> L[Search Using Serper API]
-    L --> M[Prefer Official Sony Support Sources]
-    M --> N[Generate Web-Based Answer]
-
-    J --> O[Select Final Answer]
-    N --> O
-
-    O --> P[Entry Agent]
-
-    P --> Q[Create Support Record]
-    Q --> R[Save Record to answers.txt]
-
-    Q --> S{Google Sheets Configured?}
-
-    S -- Yes --> T[Authenticate Using Service Account]
-    T --> U[Append Query and Answer to Google Sheet]
-
-    S -- No --> V[Skip Google Sheet Logging]
-
-    R --> W[Update Agent Timeline]
-    U --> W
-    V --> W
-
-    W --> X[Display Final Answer in Streamlit]
-    X --> Y[Show Source, References and Save Status]
-
-
-Multi-Agent Architecture
-
-┌──────────────────────────────────────────────────────────────┐
-│                    STREAMLIT FRONTEND                        │
-│                                                              │
-│  • Customer chat input                                       │
-│  • Chat history                                              │
-│  • Agent execution timeline                                  │
-│  • Source document viewer                                    │
-│  • Web references                                            │
-│  • Google Sheet status                                       │
-└──────────────────────────────┬───────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                   QUERY PROCESSING LAYER                     │
-│                                                              │
-│  Customer Query                                              │
-│       │                                                      │
-│       ▼                                                      │
-│  Local Knowledge Retrieval                                   │
-│       │                                                      │
-│       ▼                                                      │
-│  Relevance Decision                                          │
-└──────────────────────────────┬───────────────────────────────┘
-                               │
-                ┌──────────────┴──────────────┐
-                │                             │
-                ▼                             ▼
-┌──────────────────────────┐    ┌──────────────────────────────┐
-│ AGENT 1: ASSISTANT       │    │ AGENT 2: WEB SEARCH         │
-│                          │    │ ASSISTANT                    │
-│ • Uses local RAG context │    │                              │
-│ • Answers support query  │    │ • Uses Serper API           │
-│ • Requests missing info  │    │ • Searches current details  │
-│ • Avoids false promises  │    │ • Prefers official sources  │
-└─────────────┬────────────┘    └──────────────┬───────────────┘
-              │                                │
-              └──────────────┬─────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────┐
-│                   FINAL ANSWER SELECTION                     │
-│                                                              │
-│  RAG answer when local context is relevant                   │
-│  Web answer when local context is insufficient               │
-└──────────────────────────────┬───────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    AGENT 3: ENTRY AGENT                      │
-│                                                              │
-│  • Records customer query                                    │
-│  • Records answer source                                     │
-│  • Records final answer                                      │
-│  • Records web-search status                                 │
-│  • Records follow-up notes                                   │
-└──────────────────────┬───────────────────────┬───────────────┘
-                       │                       │
-                       ▼                       ▼
-          ┌──────────────────────┐   ┌────────────────────────┐
-          │ answers.txt          │   │ Google Sheets          │
-          │                      │   │                        │
-          │ Local support log    │   │ Cloud support log      │
-          └──────────────────────┘   └────────────────────────┘
-
-RAG Decision Architecture
-
-flowchart LR
-
-    A[Customer Query] --> B[Tokenize Query]
-
-    C[Knowledge Base TXT File] --> D[Split into Sections]
-    D --> E[Tokenize Sections]
-
-    B --> F[Compare Query Terms]
-    E --> F
-
-    F --> G[Calculate Score]
-
-    G --> H{Score Above Threshold?}
-
-    H -- Yes --> I[Return Top Relevant Sections]
-    I --> J[Assistant Agent Answer]
-
-    H -- No --> K[Return No Strong Match]
-    K --> L[Serper Web Search]
-    L --> M[Web Search Assistant Answer]
-
-CrewAI Sequential Workflow
-
-sequenceDiagram
-
-    participant U as Customer
-    participant UI as Streamlit UI
-    participant R as RAG Retriever
-    participant A as Assistant Agent
-    participant W as Web Search Agent
-    participant E as Entry Agent
-    participant T as answers.txt
-    participant G as Google Sheets
-
-    U->>UI: Submit customer-care query
-    UI->>R: Retrieve relevant local context
-
-    alt Relevant context found
-        R->>A: Send query and RAG context
-        A->>A: Generate local support answer
-        A->>W: Pass task context
-        W->>W: Skip web search
-    else No relevant context found
-        R->>A: Send query with insufficient context
-        A->>W: Request web fallback
-        W->>W: Search using Serper API
-        W->>W: Generate current web-based answer
-    end
-
-    A->>E: Pass assistant output
-    W->>E: Pass web-search output
-    E->>T: Save support record
-    E->>G: Append support log
-    E->>UI: Return final record and save status
-    UI->>U: Display answer and source
-
-Simple End-to-End Flow
-
-
-Customer Query
-      │
-      ▼
-Streamlit Frontend
-      │
-      ▼
-Local RAG Retrieval
-      │
-      ▼
-Is Relevant Context Available?
-      │
-      ├── Yes ──► Assistant Agent ──► Local RAG Answer
-      │
-      └── No ───► Web Search Agent ──► Serper API Answer
-                                              │
-                         ┌────────────────────┘
-                         ▼
-                  Final Answer
-                         │
-                         ▼
-                    Entry Agent
-                         │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-         answers.txt          Google Sheets
-              │                     │
-              └──────────┬──────────┘
-                         ▼
-             Display Result in Streamlit    
+- Do not commit `answers.txt` if it contains customer queries or API output.
+- Keep `OPENAI_API_KEY`, `SERPER_API_KEY`, and Google credentials private.
