@@ -1,0 +1,6 @@
+crewai
+crewai-tools
+google-auth
+gspread
+python-dotenv
+streamlit

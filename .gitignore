@@ -1,0 +1,6 @@
+.env
+answers.txt
+__pycache__/
+service-account.json
+*service-account*.json
+*credentials*.json

@@ -1,0 +1,192 @@
+Sony Customer Care Knowledge Base (India)
+Version date: 2026-07-10
+Purpose: RAG source document for a Sony customer-care support assistant.
+Scope: Sony India electronics support for consumer questions about TVs, home theatre,
+headphones, audio devices, cameras, camcorders, accessories, storage media,
+PlayStation support routing, product registration, warranty, service booking,
+repair status, and escalation preparation.
+
+
+Important assistant behavior:
+- Give calm, step-by-step support.
+- Ask for the product model, serial number or IMEI, purchase date, invoice or
+  warranty reference, and a short issue description before advising repair.
+- Do not promise warranty approval, replacement, refund, or free repair.
+- For current pricing, warranty eligibility, and live appointment slots, send the
+  customer to official Sony support or the service center locator.
+- For urgent electrical safety problems, tell the customer to unplug the product
+  and avoid using it until inspected by authorized service.
+- If the customer is outside India, explain that this document is India-focused
+  and route them to the Sony support site for their country.
+
+Section: Quick Routing
+Intent phrases: contact sony, customer care number, call support, email sony,
+live chat, talk to agent, help desk
+Sony India customer support can be reached through official self-help pages,
+live chat, email/contact form, phone support, service booking, service center
+locator, and repair status tracking. For quick self-help, route customers to
+Sony India's support page and ask them to search by product model.
+
+Section: Contact Channels
+Intent phrases: phone number, helpline, live chat hours, support timings,
+customer care timing, IVR options
+Sony India lists the customer-care phone number as 080 6500 6500. The contact
+page lists IVR Option 1 for demo and installation and IVR Option 2 for other
+queries. The phone support availability shown on the contact page is 9:00 AM to
+7:30 PM. Live chat support is available for questions about TV, camera, audio
+device, or accessory categories, with hours shown as 9:00 AM to 7:00 PM. If chat
+agents are occupied or chat is offline, ask the customer to refresh later or use
+phone/email support.
+
+Section: Product Categories
+Intent phrases: product type, supported product, television, camera, headphones,
+audio, car, marine, computer, mobile, accessory, storage, playstation
+The Sony India support page organizes support by product type. Common categories
+include televisions and projectors, cameras and camcorders, headphones/audio and
+video, car and marine entertainment, personal computers, mobile phones and
+tablets, PlayStation, accessories, storage and recording media, business and
+professional products, and other products. For professional broadcast or business
+products, route the customer to Sony professional product support.
+
+Section: Self Help Before Service
+Intent phrases: fix online, troubleshoot, manual, firmware, software update,
+FAQ, questions and answers, support app
+Before arranging repair, ask the customer to try official self-help resources:
+search for the model on Sony support, check the manual, review Q&A articles,
+run troubleshooting guides, and install firmware or software updates when
+available. Recommend the Support by Sony mobile app for product information and
+update notifications. Do not tell the customer to install firmware unless the
+model page confirms that an update applies to their exact model.
+
+Section: Warranty Overview
+Intent phrases: warranty, standard warranty, extended warranty, overseas
+warranty, warranty terms, warranty claim, warranty card
+Sony products may be covered by Sony's standard manufacturer warranty. Warranty
+terms depend on product type, country, purchase channel, date of purchase, and
+valid documentation. Ask the customer for invoice, warranty card, product model,
+serial number, purchase date, and seller information. If warranty eligibility is
+unclear, advise the customer to contact Sony support or an authorized service
+center. For extended or overseas warranty questions, route to Sony India's repair
+and warranty section.
+
+Section: Out Of Warranty Repairs
+Intent phrases: out of warranty, paid repair, repair cost, service charges,
+expired warranty, paid service
+For products outside warranty, Sony India says customers can contact Sony to
+arrange repairs through Sony authorized service centers. Service charges may
+apply. Ask the customer to check official service charges and confirm costs with
+the service center before approving a repair. Do not estimate repair cost without
+current official pricing.
+
+Section: Service Appointment
+Intent phrases: book service, service booking, appointment, home service,
+installation, demo installation, wall mount, repair visit
+Sony India's book service page supports online appointment requests. It lists
+home demo-installation for LCD TV and home theatre systems, and home service for
+television and home theatre systems. Appointment forms may ask for appointment
+type, product model, serial number or IMEI, purchase date, warranty reference,
+whether the product is under warranty, dealer details, preferred appointment
+date, issue comments, name, email, phone, address, postal code, state, and city.
+The page says Sony will get back within the next 48 hours for applicable service
+requests.
+
+Section: Track Repair Status
+Intent phrases: repair status, track repair, job number, service job sheet,
+repair job number, installation status
+To track repair or installation status, the customer needs the 8-digit Repair
+Job number from the Service Job Sheet and the contact number used during repair
+registration. The tracking page may show fields such as service type, serial
+number, model name, email address, repair job number, job type, product model,
+serial number, and description. If the customer does not have the job number,
+ask them to check the service sheet, SMS/email from Sony, or contact support.
+
+Section: Service Center Locator
+Intent phrases: service center near me, authorized service center, repair
+location, locator, nearest sony service
+Use Sony's service center locator for the nearest authorized service location.
+Ask for product category, city, state, and PIN code if helping the customer find
+the correct route. Remind the customer to confirm opening hours, appointment
+requirements, and accepted product categories before visiting.
+
+Section: Product Registration
+Intent phrases: register product, my sony, track warranty, product registration,
+register camera, register audio, extended warranty registration
+Sony India product registration is available for select product categories.
+Registration can help customers manage Sony products, track warranty-related
+information, receive firmware updates, and access applicable offers. The
+customer may need to create an account, sign in, enter product details, and
+upload or provide invoice details. Registration offers and warranty extensions
+can have eligibility windows and product-model restrictions, so always ask the
+customer to verify the exact terms on the registration portal.
+
+Section: Common TV Questions
+Intent phrases: bravia, tv not turning on, no picture, no sound, wifi not
+working, app not working, remote not working, hdmi issue, installation
+For BRAVIA or Sony TV issues, ask for model name, screen size, purchase date,
+software version if available, connection type, and whether the issue affects
+all inputs or only one app/device. Basic safe steps: restart the TV, check power
+and HDMI cables, test another input/source, check network connection, replace or
+test remote batteries, and check the model support page for firmware updates.
+For wall-mounting, installation, repeated power failure, burning smell, damaged
+screen, liquid exposure, or internal hardware issues, route to authorized
+service.
+
+Section: Common Headphone And Audio Questions
+Intent phrases: headphones pairing, bluetooth not connecting, no sound,
+charging issue, left earbud not working, noise cancelling, speaker not charging
+For headphones, earbuds, soundbars, wireless speakers, or audio systems, ask for
+model name, connected device, app used, firmware version if known, and whether
+the issue happens with multiple phones/computers. Basic safe steps: charge the
+device, reset or initialize using model-specific instructions, remove and pair
+Bluetooth again, test with another device, check the Sony app, and look for
+firmware updates on the official model page. For battery swelling, overheating,
+water damage, or physical damage, stop use and contact service.
+
+Section: Common Camera Questions
+Intent phrases: alpha camera, lens issue, camera not turning on, memory card,
+focus problem, firmware update, sensor, warranty camera
+For Sony cameras and camcorders, ask for body model, lens model, battery model,
+memory card type, firmware version if known, error message, and whether the
+problem appears with another battery, lens, or card. Basic safe steps: charge or
+swap battery, reseat lens and memory card, check camera settings, reset settings
+if appropriate, and check official firmware for the exact model. Do not suggest
+cleaning the image sensor unless the customer is comfortable with the official
+instructions; otherwise route to service.
+
+Section: Warranty Exclusions And Cautions
+Intent phrases: warranty void, serial number removed, water damage, accidental
+damage, unauthorized repair, normal wear, data loss, third party accessories
+Warranty and extended warranty terms can exclude issues such as unauthorized
+modifications, altered or removed serial numbers, external accessories or
+cosmetic parts, improper installation, incompatible third-party equipment,
+third-party software or recorded media issues, normal wear and tear, accidents,
+lightning, water ingress, fire, acts of God, excessive shock, poor ventilation,
+and other external causes. Sony India warranty terms also advise customers to
+back up data because service may affect stored content and Sony is not
+responsible for loss of data or business opportunity. Apply these points as
+general caution, not as a final eligibility decision.
+
+Section: Escalation Preparation
+Intent phrases: complaint, escalation, unresolved, bad service, repair delayed,
+case pending, replacement request
+For escalation, collect customer name, registered phone and email, product model,
+serial number, purchase date, invoice copy, warranty card if available, repair
+job number, service center name, dates of previous contact, photos or videos of
+the issue, and a short timeline. Summarize the customer's request clearly:
+repair, replacement review, refund review, status update, installation, or
+technical guidance. Route the customer to Sony's contact form or customer-care
+phone line and advise them to keep the case or repair job number for follow-up.
+
+Section: Answer Style Examples
+Intent phrases: example answer, response format, support tone
+Example for warranty: "I can help you check the next step. Please share the
+model number, serial number, purchase date, and whether you have the invoice or
+warranty card. Warranty approval must be confirmed by Sony support or an
+authorized service center."
+Example for repair status: "To track the repair, use the 8-digit Repair Job
+number from your Service Job Sheet and the phone number used during registration.
+If you do not have the job number, check Sony's SMS/email confirmation or call
+080 6500 6500."
+Example for unsafe power issue: "Please unplug the product and avoid using it.
+Because this may involve electrical safety or internal hardware, contact Sony
+authorized service before trying further troubleshooting."
