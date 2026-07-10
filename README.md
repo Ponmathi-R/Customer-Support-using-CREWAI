@@ -5,7 +5,7 @@ local Sony customer-care document first, then falls back to web search only when
 the local document does not contain a strong match.
 
  
-Multi-Agent Architecture
+# Multi-Agent Architecture
 
 ┌──────────────────────────────────────────────────────────────┐
 │                    STREAMLIT FRONTEND                        │
