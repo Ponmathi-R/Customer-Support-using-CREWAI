@@ -112,7 +112,7 @@ def task_output_text(task) -> str:
     return str(output).strip() if output else ""
 
 
-def build_and_run_crew(query: str, rag_context: str, use_web_search: bool) -> Dict[str, str]:
+def build_and_run_crew(query: str, rag_context: str, use_web_search: bool) -> Dict[str, object]:
     from crewai import Agent, Crew, Process, Task
 
     search_tools = []
@@ -121,13 +121,27 @@ def build_and_run_crew(query: str, rag_context: str, use_web_search: bool) -> Di
 
         search_tools = [SerperDevTool(n_results=5)]
 
-    assistant = Agent(
-        role="Assistant",
-        goal="Answer Sony customer-care queries directly using the supplied support context when relevant.",
+    greeting_agent = Agent(
+        role="Greeting Agent",
+        goal="Greet the customer warmly and acknowledge their support request.",
         backstory=(
-            "You are a careful Sony customer-care assistant. You give concise, practical "
-            "answers, ask for missing model or warranty details, and avoid promising repair "
-            "or warranty outcomes."
+            "You are the first point of contact for Sony customer care. You greet the "
+            "customer professionally, acknowledge the request, and briefly say the support "
+            "team will check the best available source."
+        ),
+        llm=DEFAULT_MODEL,
+        verbose=True,
+        allow_delegation=False,
+    )
+
+    rag_search_agent = Agent(
+        role="RAG Search Agent",
+        goal="Answer Sony customer-care queries using the supplied local RAG context.",
+        backstory=(
+            "You are a careful Sony customer-care RAG specialist. You use only the provided "
+            "local support context when it is relevant. You give concise, practical answers, "
+            "ask for missing model or warranty details, and avoid promising repair or "
+            "warranty outcomes."
         ),
         llm=DEFAULT_MODEL,
         verbose=True,
@@ -153,29 +167,45 @@ def build_and_run_crew(query: str, rag_context: str, use_web_search: bool) -> Di
 
     entry_agent = Agent(
         role="Entry Agent",
-        goal="Write the customer query, final answer, and web-search status into a text record.",
+        goal="Write Agent 1 output and the selected Agent 2 or Agent 3 output into a text record.",
         backstory=(
-            "You are a precise support record keeper. You preserve the customer's query, "
-            "the final answer, and whether web search was used in a clean text format."
+            "You are a precise support record keeper. You receive execution memory from the "
+            "previous agents, preserve the greeting, preserve either the RAG answer or the "
+            "web-search answer, and save everything in a clean text format."
         ),
         llm=DEFAULT_MODEL,
         verbose=True,
         allow_delegation=False,
     )
 
-    assistant_task = Task(
+    greeting_task = Task(
+        description=(
+            "Customer query:\n{query}\n\n"
+            "Greet the customer in one or two friendly sentences. Acknowledge their request "
+            "without answering the support question yet."
+        ),
+        expected_output=(
+            "A short greeting that acknowledges the customer's Sony support request."
+        ),
+        agent=greeting_agent,
+    )
+
+    rag_task = Task(
         description=(
             "Customer query:\n{query}\n\n"
             "Relevant local Sony customer-care RAG context:\n{rag_context}\n\n"
-            "Answer the query directly. Use the local context only when it is relevant. "
-            "If details are missing, ask for the exact details needed. Keep the answer "
-            "customer-friendly and avoid claiming warranty approval."
+            "RAG match status: {rag_status}\n\n"
+            "If RAG match status is FOUND, answer the customer using only the local RAG "
+            "context. If RAG match status is NOT_FOUND, do not invent an answer; return "
+            "exactly: RAG search did not find enough relevant local context. "
+            "If details are missing from a valid RAG answer, ask for the exact details "
+            "needed. Keep the answer customer-friendly and avoid claiming warranty approval."
         ),
         expected_output=(
-            "A direct customer-care answer for the query, with practical next steps and "
-            "missing details to request if needed."
+            "A RAG-based answer when local context is relevant, otherwise a clear no-match note."
         ),
-        agent=assistant,
+        agent=rag_search_agent,
+        context=[greeting_task],
     )
 
     if use_web_search:
@@ -203,30 +233,38 @@ def build_and_run_crew(query: str, rag_context: str, use_web_search: bool) -> Di
         description=web_description,
         expected_output=web_expected_output,
         agent=web_search_assistant,
-        context=[assistant_task],
+        context=[greeting_task, rag_task],
     )
 
     entry_task = Task(
         description=(
             "Create a text support record for this query:\n{query}\n\n"
-            "Use the previous task outputs as the Assistant Answer and Web Search status. "
-            "If web search was skipped, record that clearly. Write the record with these "
-            "labels: Query, Answer Source, Assistant Answer, Web Search Status or Answer, "
-            "Follow-up Notes. This text will be saved to:\n"
+            "Execution memory is available through the previous task outputs:\n"
+            "- Agent 1 output: Greeting Agent output\n"
+            "- Agent 2 output: RAG Search Agent output\n"
+            "- Agent 3 output: Web Search Assistant output\n\n"
+            "Selected answer source: {answer_source}\n\n"
+            "Write Agent 1 output and either Agent 2 output or Agent 3 output. If the "
+            "selected answer source is Local RAG Document, use Agent 2 output as the final "
+            "answer and record Agent 3 as skipped. If the selected answer source is Web "
+            "Search, use Agent 3 output as the final answer and record Agent 2 as no match. "
+            "Write the record with these labels: Query, Agent 1 Greeting, Selected Answer "
+            "Source, Selected Answer, Agent 2 Memory, Agent 3 Memory, Follow-up Notes. "
+            "This text will be saved to:\n"
             "{answer_file}"
         ),
         expected_output=(
-            "A complete text record containing the query, answer source, final answer, "
-            "web-search status or answer, and follow-up notes."
+            "A complete text record containing Agent 1 output and the selected Agent 2 or "
+            "Agent 3 answer, plus the execution-memory details."
         ),
         agent=entry_agent,
-        context=[assistant_task, web_task],
+        context=[greeting_task, rag_task, web_task],
         output_file=str(ANSWER_LOG_PATH),
     )
 
     crew = Crew(
-        agents=[assistant, web_search_assistant, entry_agent],
-        tasks=[assistant_task, web_task, entry_task],
+        agents=[greeting_agent, rag_search_agent, web_search_assistant, entry_agent],
+        tasks=[greeting_task, rag_task, web_task, entry_task],
         process=Process.sequential,
         verbose=True,
     )
@@ -235,16 +273,30 @@ def build_and_run_crew(query: str, rag_context: str, use_web_search: bool) -> Di
         inputs={
             "query": query,
             "rag_context": rag_context,
+            "rag_status": "NOT_FOUND" if use_web_search else "FOUND",
+            "answer_source": "Web Search" if use_web_search else "Local RAG Document",
             "answer_file": str(ANSWER_LOG_PATH),
         }
     )
 
+    execution_memory = {
+        "agent_1_greeting": task_output_text(greeting_task),
+        "agent_2_rag_output": task_output_text(rag_task),
+        "agent_3_web_output": task_output_text(web_task),
+        "selected_output": task_output_text(web_task)
+        if use_web_search
+        else task_output_text(rag_task),
+        "selected_source": "Web Search" if use_web_search else "Local RAG Document",
+    }
+
     return {
-        "assistant_answer": task_output_text(assistant_task),
+        "greeting": execution_memory["agent_1_greeting"],
+        "rag_answer": execution_memory["agent_2_rag_output"],
         "web_answer": task_output_text(web_task),
         "entry_record": task_output_text(entry_task) or str(crew_output),
         "answer_file": str(ANSWER_LOG_PATH),
         "used_web_search": str(use_web_search),
+        "execution_memory": execution_memory,
     }
 
 
@@ -585,10 +637,10 @@ def initialize_session() -> None:
         ]
     if "timeline" not in st.session_state:
         st.session_state.timeline = [
-            ("RAG Retriever", "Ready", "Waiting for a customer query.", "idle"),
-            ("Assistant", "Ready", "Will answer from local Sony context first.", "idle"),
-            ("Web Search Assistant", "Standby", "Runs only if RAG has no strong match.", "idle"),
-            ("Entry Agent", "Ready", "Saves the support record to answers.txt.", "idle"),
+            ("Agent 1: Greeting Agent", "Ready", "Will greet and acknowledge the customer.", "idle"),
+            ("Agent 2: RAG Search Agent", "Ready", "Will answer from local Sony context first.", "idle"),
+            ("Agent 3: Web Search Agent", "Standby", "Runs only if RAG has no strong match.", "idle"),
+            ("Agent 4: Entry Agent", "Ready", "Receives execution memory and saves answers.txt.", "idle"),
         ]
     if "last_run" not in st.session_state:
         st.session_state.last_run = None
@@ -609,6 +661,8 @@ st.markdown(
             enough relevant context.
         </p>
         <div class="pill-row">
+            <span class="pill">💜 Glassmorphism</span>
+            <span class="pill">🌈 Animated gradients</span>
             <span class="pill">📚 Agent timeline</span>
             <span class="pill">🌐 Web fallback</span>
         </div>
@@ -638,9 +692,10 @@ st.markdown(
 )
 
 st.sidebar.markdown("### 📊 Agent status panel")
-st.sidebar.markdown(glass_card("Assistant", "Ready", "Answers from local context first"), unsafe_allow_html=True)
-st.sidebar.markdown(glass_card("Web Search Assistant", "Conditional", "Runs only for RAG fallback"), unsafe_allow_html=True)
-st.sidebar.markdown(glass_card("Entry Agent", "Ready", "Saves answers.txt"), unsafe_allow_html=True)
+st.sidebar.markdown(glass_card("Agent 1", "Greeting", "Greets and acknowledges the customer"), unsafe_allow_html=True)
+st.sidebar.markdown(glass_card("Agent 2", "RAG Search", "Answers from local context first"), unsafe_allow_html=True)
+st.sidebar.markdown(glass_card("Agent 3", "Web Search", "Runs only for RAG fallback"), unsafe_allow_html=True)
+st.sidebar.markdown(glass_card("Agent 4", "Entry", "Uses execution memory and saves answers.txt"), unsafe_allow_html=True)
 st.sidebar.markdown(glass_card("Last answer source", last_source, "Chat history is kept in this session"), unsafe_allow_html=True)
 
 if missing_keys:
@@ -658,10 +713,10 @@ if st.sidebar.button("Clear chat history"):
     ]
     st.session_state.last_run = None
     st.session_state.timeline = [
-        ("RAG Retriever", "Ready", "Waiting for a customer query.", "idle"),
-        ("Assistant", "Ready", "Will answer from local Sony context first.", "idle"),
-        ("Web Search Assistant", "Standby", "Runs only if RAG has no strong match.", "idle"),
-        ("Entry Agent", "Ready", "Saves the support record to answers.txt.", "idle"),
+        ("Agent 1: Greeting Agent", "Ready", "Will greet and acknowledge the customer.", "idle"),
+        ("Agent 2: RAG Search Agent", "Ready", "Will answer from local Sony context first.", "idle"),
+        ("Agent 3: Web Search Agent", "Standby", "Runs only if RAG has no strong match.", "idle"),
+        ("Agent 4: Entry Agent", "Ready", "Receives execution memory and saves answers.txt.", "idle"),
     ]
     st.rerun()
 
@@ -683,6 +738,8 @@ with chat_tab:
             else:
                 st.warning(last_run.get("sheet_message", "Google Sheet was not updated."))
             st.text(last_run["entry_record"])
+        with st.expander("Execution Memory Sent to Agent 4", expanded=False):
+            st.json(last_run.get("execution_memory", {}))
         if answer_path.exists():
             st.download_button(
                 "Download answers.txt",
@@ -800,7 +857,7 @@ if prompt:
 
     loading_placeholder.empty()
 
-    final_answer = result["web_answer"] if use_web_search else result["assistant_answer"]
+    final_answer = result["web_answer"] if use_web_search else result["rag_answer"]
     final_source = "Web Search" if use_web_search else "Local RAG Document"
     references = extract_urls(result["web_answer"])
     web_status = (
@@ -821,7 +878,7 @@ if prompt:
         {
             "role": "assistant",
             "content": (
-                f"**Source:** {final_source}\n\n{final_answer}\n\n"
+                f"{result['greeting']}\n\n**Source:** {final_source}\n\n{final_answer}\n\n"
                 f"**Google Sheet:** {sheet_message}"
             ),
         }
@@ -832,21 +889,23 @@ if prompt:
         "rag_context": rag_context,
         "rag_found": rag_found,
         "used_web_search": use_web_search,
-        "assistant_answer": result["assistant_answer"],
+        "greeting": result["greeting"],
+        "rag_answer": result["rag_answer"],
         "web_answer": result["web_answer"],
         "references": references,
         "entry_record": result["entry_record"],
         "answer_file": result["answer_file"],
+        "execution_memory": result["execution_memory"],
         "sheet_saved": sheet_saved,
         "sheet_message": sheet_message,
     }
 
     if rag_found:
         st.session_state.timeline = [
-            ("RAG Retriever", "Matched", "Relevant Sony document sections were retrieved.", "good"),
-            ("Assistant", "Completed", "Final answer came from the local RAG context.", "good"),
-            ("Web Search Assistant", "Skipped", "No web call was needed for this query.", "idle"),
-            ("Entry Agent", "Saved", "Support record written to answers.txt.", "good"),
+            ("Agent 1: Greeting Agent", "Completed", "Greeting saved in execution memory.", "good"),
+            ("Agent 2: RAG Search Agent", "Matched", "Relevant Sony document sections were used.", "good"),
+            ("Agent 3: Web Search Agent", "Skipped", "No web call was needed for this query.", "idle"),
+            ("Agent 4: Entry Agent", "Saved", "Agent 1 plus Agent 2 output saved to answers.txt.", "good"),
             (
                 "Google Sheet",
                 "Saved" if sheet_saved else "Skipped",
@@ -856,10 +915,10 @@ if prompt:
         ]
     else:
         st.session_state.timeline = [
-            ("RAG Retriever", "No strong match", "Local document did not meet the relevance threshold.", "warn"),
-            ("Assistant", "Checked", "Local context was insufficient for the final answer.", "warn"),
-            ("Web Search Assistant", "Completed", "Serper web search fallback produced the final answer.", "good"),
-            ("Entry Agent", "Saved", "Support record written to answers.txt.", "good"),
+            ("Agent 1: Greeting Agent", "Completed", "Greeting saved in execution memory.", "good"),
+            ("Agent 2: RAG Search Agent", "No strong match", "Local document did not meet the relevance threshold.", "warn"),
+            ("Agent 3: Web Search Agent", "Completed", "Serper web search fallback produced the final answer.", "good"),
+            ("Agent 4: Entry Agent", "Saved", "Agent 1 plus Agent 3 output saved to answers.txt.", "good"),
             (
                 "Google Sheet",
                 "Saved" if sheet_saved else "Skipped",
