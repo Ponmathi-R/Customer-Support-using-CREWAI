@@ -1,0 +1,58 @@
+```
+Query: what is the bravia troubleshooting method
+
+Agent 1 Greeting: Hello! Thank you for reaching out to Sony customer care. I understand you're looking for information on the Bravia troubleshooting method, and our support team will check the best available source to assist you with that.
+
+Agent 2 RAG Output: For troubleshooting issues related to Sony BRAVIA TVs, I found an official source that provides a comprehensive guide. Here’s the information:
+
+### BRAVIA TV Troubleshooting Guide
+
+**Source:** [Sony USA Support](https://www.sony.com/electronics/support/articles/00200862)
+
+**Summary of Troubleshooting Steps:**
+
+1. **Soft Reset**: 
+   - Use the remote control and point it at the illumination or status LED. 
+   - Press and hold the `Power` button for about 5 seconds, then release it. This action can often resolve basic issues.
+
+2. **Power Cycle**: 
+   - Unplug the TV from the wall outlet, wait for at least one minute, and then plug it back in. This method can reset many temporary glitches that may occur.
+
+3. **Check the Cables**:
+   - Ensure all cables are properly connected and check for any damage. Pay special attention to HDMI and power cables.
+
+4. **Input Check**:
+   - Switch to different HDMI ports or inputs to determine if the issue is specific to a single port. 
+
+5. **Network Issues**:
+   - If problems are connectivity-related, verify your internet connection and check the settings on the TV. You can also try restarting your router.
+
+6. **Firmware Updates**:
+   - Make sure your TV has the latest firmware. Check the support page for your specific model to find any updates that may fix existing issues.
+
+7. **Factory Reset** (if necessary):
+   - If all else fails, you might consider performing a factory reset. This process will remove all settings and return your TV to its original state.
+
+**Important Notes:**
+- Instructions may vary slightly depending on your specific TV model and region. 
+- Make sure to check your warranty status as some issues might require professional assistance if the warranty is still active.
+- It's advisable to check the official support page for your TV model’s specific troubleshooting advice or callbacks.
+
+### Additional Verification
+For the most accurate and recent updates, it is recommended to verify these details live on the Sony support website or consult a customer service representative.
+
+This official guide provides a reliable starting point for addressing various issues that may arise with BRAVIA televisions. If problems persist, reaching out to Sony's customer support directly may be necessary.
+
+Agent 3 Web Search Output: For BRAVIA or Sony TV issues, I recommend the following troubleshooting steps:
+
+1. **Restart the TV**: Unplug it from the power source, wait for about a minute, and then plug it back in.
+2. **Check power and HDMI cables**: Ensure that all cables are securely connected and not damaged.
+3. **Test another input/source**: Switch to a different HDMI port or input to see if the issue persists.
+4. **Check network connection**: If you're experiencing Wi-Fi issues, verify that your network is working properly.
+5. **Replace or test remote batteries**: Sometimes the remote may not be working due to low batteries.
+6. **Check for firmware updates**: Look at the model support page for any available updates that could resolve issues.
+
+To provide more tailored assistance, could you please let me know your TV model name, screen size, purchase date, software version if available, and whether the issue affects all inputs or only one app/device?
+
+Follow-up Notes: This record contains a combination of the detailed troubleshooting methods from the web search and the summarized troubleshooting steps provided by the support database. The suggestions should help the user address any issues with their Sony BRAVIA television effectively.
+```
